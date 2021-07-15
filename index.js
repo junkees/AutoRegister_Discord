@@ -15,7 +15,6 @@ function getSMS(test)
 {
     return test;
 }
-const killer = (suspects, dead) => Object.entries(suspects).find(([key, value]) => value.filter(name => dead.includes(name)).length === dead.length)[0]
 async function start(){
 var emails = []
 let emailsdata = await fs.reedFileSync("emails.txt").split("\n");
