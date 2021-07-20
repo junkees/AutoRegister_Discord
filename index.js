@@ -5,29 +5,32 @@ let MailBox = require('disposable-mail');
 const Mail = require("nodemailer/lib/mailer");
 let apikey = "4a4b7ecce664ce0239f2f6ce65fa9fe8"
 let onlinsim_api = "8bc6532baa5ee0647d10333fe5a0841d"
-let accountpassword = "5dc4WQJJhjQB19zmlB0o"
+
+let fingerprint = "822818675888.ta4719BBB421000"
+let accountemail = "tempgatio@lighmoweaber.bizml.ru"
+let accountpassword = "eLSMYCHX3v"
 
 
 
 async function discordReg(captcha_key)
 {
-  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
+  const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors] }); // big_red_donkey
   axios.post("https://discord.com/api/v9/auth/register", 
   {
     captcha_key: captcha_key,
     consent: true,
     date_of_birth: "2003-02-13",
-    email: "finayy@onlyawp.ru",
-    fingerprint: "8607783763968040.ta7B6OkNMtlXWhrpGKYM5y34Lus",
+    email: accountemail,
+    fingerprint: fingerprint,
     gift_code_sku_id: null,
-    invite: "https://discord.gg/hx3C7yx7",
+    invite: null,
     password: accountpassword,
     username: randomName
   })
   .then(response => {
     if(response.data['token'])
     {
-      console.log("Аккаунт зарегистрирован! ", response.data['token'])
+      console.log("Аккаунт зарегистрирован! Токен:", response.data['token'])
       createSMS(response.data['token'])
     }
   })
@@ -81,23 +84,19 @@ function createSMS(discordtoken)
 
 function getSMS(tzid, token) 
 {
-  console.log(tzid)
   axios.get(`https://onlinesim.ru/api/getState.php?apikey=${onlinsim_api}&tzid=${tzid}&message_to_code=1`).then(response => {
     let dstoken = token
-    console.log(dstoken)
     if(response.data['0']['msg'])
     {
       let codeSMS = response.data['0']['msg']
       let codeNumber = response.data['0']['number']
-      verifyPHONE(dstoken, codeSMS, codeNumber)
+      verifyPHONE(dstoken, codeSMS, codeNumber, tzid)
     }
-    console.log("CODE:", response.data['0']['msg'])
   })
 }
 
-function verifyPHONE(token, smscode, codeNumber) 
+function verifyPHONE(token, smscode, codeNumber, tzid) 
 {
-  console.log("Authorization: ", token)
   axios({
     method: 'post',
     url: 'https://discord.com/api/v9/phone-verifications/verify',
@@ -110,11 +109,11 @@ function verifyPHONE(token, smscode, codeNumber)
     }
   })
   .then(response => {
-    if(response.data['token']) endVerifyPhone(token, response.data['token'])
+    if(response.data['token']) endVerifyPhone(token, response.data['token'], tzid)
   })
 }
 
-function endVerifyPhone(token, tokenpass) {
+function endVerifyPhone(token, tokenpass, tzid) {
   axios({
     method: 'POST',
     url: 'https://discord.com/api/v9/users/@me/phone',
@@ -126,6 +125,14 @@ function endVerifyPhone(token, tokenpass) {
       "Authorization": token
     }
   })
+  .then(response => {
+    if(response) removeNumber(tzid)
+  })
+}
+
+function removeNumber(tzid)
+{
+  axios.get(`https://onlinesim.ru/api/setOperationOk.php?apikey=${onlinsim_api}&tzid=${tzid}`)
 }
 
 function inCaptcha(sitekey) {
