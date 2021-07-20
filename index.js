@@ -2,6 +2,8 @@ const axios = require("axios");
 const { send } = require("process");
 const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator')
 var TempMail = require('node-temp-mail');
+const { brotliDecompress } = require("zlib");
+const urlapi = require('url')
 
 let apikey = "4a4b7ecce664ce0239f2f6ce65fa9fe8"
 let onlinsim_api = "8bc6532baa5ee0647d10333fe5a0841d"
@@ -151,32 +153,34 @@ function emailVerify(captcha_key, token)
     console.log(response)
   })
   .catch(error => {
-    emailinCaptcha(error.response.data['captcha_sitekey'])
+    console.log(error)
+    if(error.response.data['captcha_sitekey']) emailinCaptcha(error.response.data['captcha_sitekey'], token)
   })
 }
 
-emailVerify(null, "eyJpZCI6ODY3MDc5ODA5NTk0ODE4NTYxLCJlbWFpbCI6Im1vZ2lsbHJhbnRAdGVubG9uby5iaXptbC5ydSJ9.YPb5Ag.FyCyOwk421HsFlF0HDMyc4aqqG4")
-
-function emailinCaptcha(sitekey) {
+function emailinCaptcha(sitekey, token) {
   axios.get(`http://rucaptcha.com/in.php?key=${apikey}&method=hcaptcha&sitekey=${sitekey}&json=1&pageurl=https://discord.com/api/v9/auth/verify`).then(response => {
+    console.log(response.data)
     let captchaid = response.data['request']
-    setTimeout(emailresCaptcha, 20000, captchaid)
+    setTimeout(emailresCaptcha, 21000, captchaid, token)
   })
 }
 
 
-function emailresCaptcha(captchaid) {
+function emailresCaptcha(captchaid, token) {
   axios.get(`http://rucaptcha.com/res.php?key=${apikey}&action=get&id=${captchaid}&json=1`).then(response => {
-     (response.data['request'], "eyJpZCI6ODY3MDc5ODA5NTk0ODE4NTYxLCJlbWFpbCI6Im1vZ2lsbHJhbnRAdGVubG9uby5iaXptbC5ydSJ9.YPb5Ag.FyCyOwk421HsFlF0HDMyc4aqqG4")
+    captchakey = response.data['request']
+    emailVerify(captchakey, token)
   })
 }
 
 async function start() {
   await discordReg()
-  await setInterval( mailCheck, 5000)
+  await setInterval(mailCheck, 50000)
 }
 
 start()
+
 
 
 
@@ -184,15 +188,22 @@ async function mailCheck() {
   var address = new TempMail(`${randomName}`);
   address.fetchEmails((err, body) => {
     if(err) return
-    console.log(body)
+    console.log("Current TempMail:", address.getAddress())
+    if(body.messageCount > 0 && body.messageCount < 2)
+    {
+      let url = body.messages[0]['message'].match(/\bhttps?:\/\/\S+/gi)['0']
+      axios.get(url).then(response => {
+        let url1 = response.request.res.responseUrl
+        console.log(url1)
+        let finalyurl = url1.split("=")[1]
+        emailVerify(null, finalyurl)
+      })
+    }
   })
 }
 
+mailCheck()
 
 
 
 
-axios.get("https://click.discord.com/ls/click?upn=qDOo8cnwIoKzt0aLL1cBeFE1RlVCKJFF5zAq8ml-2BFh1dq-2FeX22E9yMPFmLMSO5CYT1r0Yrh-2Fnz2nqRU6-2Bm0jsSSOQfBPU3ZmSlBObkmZOWkALi0OkMkVDocRZuQoFqwmcu6Iu10vuQa3zSiqnaAsI-2Bn9vOfbIlhW3e9l-2Fg-2B702UnrRaTrU3UC8XHHQNRFyh9JwIoZErQL4uBO9wsYiVHrA-3D-3Dsprg_ntwFKejrKSqfdAPbzvUciFrrKz1-2B7kdNSBqMdGzTJWnvYynOHyIH4Uh2HAdFE9cxMNe70o2FWpfxBwHeCYiiFlH6MO4CknlzTrDmruzyIs0826LT7RBAjN8nO6i0ydnUbxXI7YDGHyh2nToovW7lbVgw2vZwQ37zOkoPCT7mJjRM8WcCjDfBRTS2Soadr8nwmlFH-2FbtmK3pJsVOdNmEJhw-3D-3D")
-.then(response => {
-  console.log(response.request['hash'])
-})
