@@ -1,27 +1,27 @@
 const axios = require("axios");
 const { send } = require("process");
-var randomEmail = require('random-email');
 const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator');
+let MailBox = require('disposable-mail');
+const Mail = require("nodemailer/lib/mailer");
 let apikey = "4a4b7ecce664ce0239f2f6ce65fa9fe8"
 let onlinsim_api = "8bc6532baa5ee0647d10333fe5a0841d"
+let accountpassword = "5dc4WQJJhjQB19zmlB0o"
 
 
-function discordReg(captcha_key)
+
+async function discordReg(captcha_key)
 {
-  let randomE = randomEmail({ domain: 'gmail.com' });
   const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors, animals] }); // big_red_donkey
-  console.log(`abibaabsus${randomE}`)
   axios.post("https://discord.com/api/v9/auth/register", 
   {
     captcha_key: captcha_key,
     consent: true,
     date_of_birth: "2003-02-13",
-    //email: `abibaabsus${randomE}`,
-    email: "iphonedan11824@gmail.com",
+    email: "finayy@onlyawp.ru",
     fingerprint: "8607783763968040.ta7B6OkNMtlXWhrpGKYM5y34Lus",
     gift_code_sku_id: null,
     invite: "https://discord.gg/hx3C7yx7",
-    password: "5dc4WQJJhjQB19zmlB0o",
+    password: accountpassword,
     username: randomName
   })
   .then(response => {
@@ -59,20 +59,23 @@ function sendCode(token, number, tzid)
   .catch(error => {
     console.log(error)
   }) */
+  let dstoken = token
   let tzid_sim = tzid
-  setTimeout(getSMS, 12000, tzid_sim)
+  setTimeout(getSMS, 15000, tzid_sim, dstoken)
 }
 
 
 function createSMS(discordtoken)
 {
   let dsToken = discordtoken
-  console.log(dsToken)
-  axios.post(`https://onlinesim.ru/api/getNum.php?apikey=${onlinsim_api}&service=discord&number=1`).then(response => {
+  axios.post(`https://onlinesim.ru/api/getNum.php?apikey=${onlinsim_api}&service=discord&number=1`)
+  .then(response => {
     let tzid = response.data['tzid']
     let number = response.data['number']
-
     setTimeout(sendCode, 2000, dsToken, number, tzid)
+  })
+  .catch(error => {
+    console.log(error)
   })
 }
 
@@ -81,6 +84,7 @@ function getSMS(tzid, token)
   console.log(tzid)
   axios.get(`https://onlinesim.ru/api/getState.php?apikey=${onlinsim_api}&tzid=${tzid}&message_to_code=1`).then(response => {
     let dstoken = token
+    console.log(dstoken)
     if(response.data['0']['msg'])
     {
       let codeSMS = response.data['0']['msg']
@@ -93,7 +97,7 @@ function getSMS(tzid, token)
 
 function verifyPHONE(token, smscode, codeNumber) 
 {
-  console.log(token)
+  console.log("Authorization: ", token)
   axios({
     method: 'post',
     url: 'https://discord.com/api/v9/phone-verifications/verify',
@@ -106,10 +110,23 @@ function verifyPHONE(token, smscode, codeNumber)
     }
   })
   .then(response => {
-    console.log(respose)
+    if(response.data['token']) endVerifyPhone(token, response.data['token'])
   })
 }
 
+function endVerifyPhone(token, tokenpass) {
+  axios({
+    method: 'POST',
+    url: 'https://discord.com/api/v9/users/@me/phone',
+    data: {
+      password: accountpassword,
+      phone_token: tokenpass
+    },
+    headers: {
+      "Authorization": token
+    }
+  })
+}
 
 function inCaptcha(sitekey) {
   axios.get(`http://rucaptcha.com/in.php?key=${apikey}&method=hcaptcha&sitekey=${sitekey}&json=1&pageurl=https://discord.com/api/v9/auth/register`).then(response => {
@@ -127,12 +144,7 @@ function resCaptcha(captchaid) {
 }
 
 function start() {
-  //getSMS(39306611, "12332")
-  //discordReg("test")
-  verifyPHONE("1321", "123", "322")
-  //createSMS()
+  discordReg()
 }
 
 start()
-
-
