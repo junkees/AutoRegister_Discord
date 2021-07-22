@@ -7,7 +7,7 @@ const urlapi = require('url')
 
 let apikey = "4a4b7ecce664ce0239f2f6ce65fa9fe8"
 let onlinsim_api = "8bc6532baa5ee0647d10333fe5a0841d"
-
+let UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0"
 
 const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors] });
 
@@ -29,17 +29,25 @@ let day = getRandomInt(1, 9)
 
 async function discordReg(captcha_key)
 {
-  axios.post("https://discord.com/api/v9/auth/register", 
-  {
-    captcha_key: captcha_key,
-    consent: true,
-    date_of_birth: `${year}-0${day}-0${month}`,
-    email: accountemail,
-    fingerprint: fingerprint,
-    gift_code_sku_id: null,
-    invite: null,
-    password: accountpassword,
-    username: randomName
+  axios({
+    method: "post",
+    url: "https://discord.com/api/v9/auth/register",
+    data: 
+    {
+      captcha_key: captcha_key,
+      consent: true,
+      date_of_birth: `${year}-0${day}-0${month}`,
+      email: accountemail,
+      fingerprint: fingerprint,
+      gift_code_sku_id: null,
+      invite: null,
+      password: accountpassword,
+      username: randomName
+    },
+    headers:
+    {
+      "User-Agent": UserAgent
+    }
   })
   .then(response => {
     if(response.data['token'])
@@ -49,7 +57,7 @@ async function discordReg(captcha_key)
     }
   })
   .catch(error => {
-    //console.log(error.response.data)
+    console.log(error.response.data)
     if(error.response.data['captcha_sitekey']) {
       let sitekey = error.response.data['captcha_sitekey']
       inCaptcha(sitekey)
@@ -74,7 +82,8 @@ function sendCode(token, number, tzid)
       phone: number
     },
     headers: {
-      "Authorization": token
+      "Authorization": token,
+      "User-Agent": UserAgent
     }
   })
   setTimeout(getSMS, 15000, tzid, token)
@@ -83,7 +92,14 @@ function sendCode(token, number, tzid)
 
 function createSMS(discordtoken)
 {
-  axios.post(`https://onlinesim.ru/api/getNum.php?apikey=${onlinsim_api}&service=discord&number=1`)
+  axios({
+    method: "post",
+    url: "https://onlinesim.ru/api/getNum.php?apikey=${onlinsim_api}&service=discord&number=1",
+    headers:
+    {
+      "User-Agent": UserAgent
+    }
+  })
   .then(response => {
     let tzid = response.data['tzid']
     let number = response.data['number']
@@ -118,7 +134,8 @@ function verifyPHONE(token, smscode, codeNumber, tzid)
       phone: codeNumber
     },
     headers: {
-      "Authorization": token
+      "Authorization": token,
+      "User-Agent": UserAgent
     }
   })
   .then(response => {
@@ -139,7 +156,8 @@ function endVerifyPhone(token, tokenpass, tzid) {
       phone_token: tokenpass
     },
     headers: {
-      "Authorization": token
+      "Authorization": token,
+      "User-Agent": UserAgent
     }
   })
   .then(response => {
@@ -173,9 +191,16 @@ function resCaptcha(captchaid) {
 
 function emailVerify(captcha_key, token)
 {
-  axios.post("https://discord.com/api/v9/auth/verify", {
-    captcha_key: captcha_key,
-    token: token
+  axios({
+    method: "post",
+    url: "https://discord.com/api/v9/auth/verify",
+    data: {
+      captcha_key: captcha_key,
+      token: token
+    },
+    headers: {
+      "User-Agent": UserAgent
+    }
   })
   .then(response => {
     console.log("Почта подтверждена.")
