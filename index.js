@@ -57,7 +57,7 @@ async function discordReg(captcha_key)
     }
   })
   .catch(error => {
-    console.log(error.response.data)
+    //console.log(error.response.data)
     if(error.response.data['captcha_sitekey']) {
       let sitekey = error.response.data['captcha_sitekey']
       inCaptcha(sitekey)
@@ -66,7 +66,7 @@ async function discordReg(captcha_key)
     {
       if(error.response.data['message'] == 'You are being rate limited.')
       {
-        console.log(`Rate-limit у дискорда. Пробуйте через ${error.response.data['message']}`)
+        console.log(`Rate-limit у дискорда. Пробуйте через ${error.response.data['retry_after']}`)
       }
     }
   })
@@ -94,13 +94,14 @@ function createSMS(discordtoken)
 {
   axios({
     method: "post",
-    url: "https://onlinesim.ru/api/getNum.php?apikey=${onlinsim_api}&service=discord&number=1",
+    url: `https://onlinesim.ru/api/getNum.php?apikey=${onlinsim_api}&service=discord&number=1`,
     headers:
     {
       "User-Agent": UserAgent
     }
   })
   .then(response => {
+    console.log(response)
     let tzid = response.data['tzid']
     let number = response.data['number']
     console.log("Телефон создан. OnlineSIM:", number)
@@ -230,6 +231,7 @@ function emailresCaptcha(captchaid, token) {
 async function start() {
   await discordReg()
   //await setInterval(mailCheck, 50000)
+  //createSMS("test")
 }
 
 start()
