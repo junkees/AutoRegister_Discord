@@ -240,7 +240,7 @@ function emailresCaptcha(captchaid, token) {
 }
 
 async function start() {
-  //await discordReg()
+  await discordReg()
   //await setInterval(mailCheck, 50000)
   //createSMS("test")
   //oa_ping()
