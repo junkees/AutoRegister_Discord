@@ -1,15 +1,17 @@
-const axios = require("axios");
-const { send } = require("process");
-const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator')
-var TempMail = require('node-temp-mail');
-const { brotliDecompress } = require("zlib");
-const urlapi = require('url')
+const axios_proxy = require("axios"); // web requests
+const { uniqueNamesGenerator, adjectives, colors, animals } = require('unique-names-generator') // unique nicknames
+var TempMail = require('node-temp-mail'); // tempmail
+const HttpsProxyAgent = require("https-proxy-agent") // https proxy
+const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors] }); // random nickname
 
+/////////////////////////////SOCKET CONNECT//////////////////////////////////
+const httpsAgent = new HttpsProxyAgent({host: "185.183.163.222", port: "58575", auth: "YU9yr6:ZmUELw"})
+axios = axios_proxy.create() // axios_proxy.create({httpsAgent})
+/////////////////////////////////////////////////////////////////////////////
 let apikey = "4a4b7ecce664ce0239f2f6ce65fa9fe8"
 let onlinsim_api = "8bc6532baa5ee0647d10333fe5a0841d"
-let UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0"
+let UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:90.0) Gecko/20100101 Firefox/90.0" // useragent
 
-const randomName = uniqueNamesGenerator({ dictionaries: [adjectives, colors] });
 
 
 let fingerprint = "822818675888.ta4719BBB421000"
@@ -27,8 +29,10 @@ let day = getRandomInt(1, 9)
 
 
 
+
 async function discordReg(captcha_key)
 {
+  //console.log(captcha_key)
   axios({
     method: "post",
     url: "https://discord.com/api/v9/auth/register",
@@ -57,7 +61,7 @@ async function discordReg(captcha_key)
     }
   })
   .catch(error => {
-    //console.log(error.response.data)
+    console.log(error.response.data)
     if(error.response.data['captcha_sitekey']) {
       let sitekey = error.response.data['captcha_sitekey']
       inCaptcha(sitekey)
@@ -101,7 +105,7 @@ function createSMS(discordtoken)
     }
   })
   .then(response => {
-    console.log(response)
+    //console.log(response)
     let tzid = response.data['tzid']
     let number = response.data['number']
     console.log("Телефон создан. OnlineSIM:", number)
@@ -178,15 +182,22 @@ function removeNumber(tzid)
 function inCaptcha(sitekey) {
   axios.get(`http://rucaptcha.com/in.php?key=${apikey}&method=hcaptcha&sitekey=${sitekey}&json=1&pageurl=https://discord.com/api/v9/auth/register`).then(response => {
     let captchaid = response.data['request']
-    setTimeout(resCaptcha, 20000, captchaid)
+    setTimeout(resCaptcha, 25000, captchaid, sitekey)
   })
 }
 
 
-function resCaptcha(captchaid) {
+function resCaptcha(captchaid, sitekey) {
   axios.get(`http://rucaptcha.com/res.php?key=${apikey}&action=get&id=${captchaid}&json=1`).then(response => {
     //console.log(response.data['request'])
-    discordReg(response.data['request'])
+    if(response.data['request'] == "CAPCHA_NOT_READY")
+    {
+      inCaptcha(sitekey)
+    }
+    else
+    {
+      discordReg(response.data['request'])
+    }
   })
 }
 
@@ -229,9 +240,10 @@ function emailresCaptcha(captchaid, token) {
 }
 
 async function start() {
-  await discordReg()
+  //await discordReg()
   //await setInterval(mailCheck, 50000)
   //createSMS("test")
+  //oa_ping()
 }
 
 start()
